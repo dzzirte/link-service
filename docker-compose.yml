@@ -25,7 +25,7 @@ services:
       - PGPORT=5432
       - PGUSER=postgres
       - PGPASSWORD=my_pass
-      - PGNAME=postgres
+      - PGDATABASE=postgres
     depends_on:
       postgres:
         condition: service_healthy
