@@ -22,8 +22,8 @@ type AuthConfig struct {
 
 // ДОБАВИТЬ ВОЗМОЖНОСТЬ ЧТЕНИЯ ИЗ ФЛАГА(ARGS)
 
-func LoadConfig() *Config {
-	err := godotenv.Load()
+func LoadConfig(envFile string) *Config {
+	err := godotenv.Load(envFile)
 	if err != nil {
 		log.Println("Error loading .env file, using default config")
 	}
@@ -32,7 +32,7 @@ func LoadConfig() *Config {
 			DSN: os.Getenv("DSN"),
 		},
 		Auth: AuthConfig{
-			Secret: os.Getenv("TOKEN"),
+			Secret: os.Getenv("SECRET"),
 		},
 	}
 }

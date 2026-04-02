@@ -2,6 +2,7 @@ package auth
 
 import (
 	"awesomeproject/configs"
+	"awesomeproject/pkg/jwt"
 	"awesomeproject/pkg/req"
 	"awesomeproject/pkg/res"
 	"net/http"
@@ -9,15 +10,18 @@ import (
 
 type AuthHandler struct {
 	*configs.Config
+	*AuthService
 }
 
 type AuthHandlerDeps struct {
 	*configs.Config
+	*AuthService
 }
 
-func SetupHandler(router *http.ServeMux, deps AuthHandlerDeps) {
+func SetupAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	handler := AuthHandler{
-		Config: deps.Config,
+		Config:      deps.Config,
+		AuthService: deps.AuthService,
 	}
 	router.HandleFunc("POST /auth/login", handler.Login())
 	router.HandleFunc("POST /auth/register", handler.Register())
@@ -25,20 +29,50 @@ func SetupHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bodyLogin, err := req.HandleBody[LoginRequest](&w, r)
+		body, err := req.HandleBody[LoginRequest](&w, r)
 		if err != nil {
 			return
 		}
-		res.Json(w, bodyLogin, 200)
+		email, err := handler.AuthService.Login(body.Email, body.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(jwt.JWTData{
+			Email: email,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data := LoginResponse{
+			Token: token,
+		}
+		res.Json(w, data, http.StatusOK)
 	}
 }
 
 func (handler *AuthHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bodyRegister, err := req.HandleBody[RegisterRequest](&w, r)
+		body, err := req.HandleBody[RegisterRequest](&w, r)
 		if err != nil {
 			return
 		}
-		res.Json(w, bodyRegister, 200)
+		email, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(jwt.JWTData{
+			Email: email,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data := RegisterResponse{
+			Token: token,
+		}
+		res.Json(w, data, 201)
 	}
 }
