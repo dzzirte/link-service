@@ -10,3 +10,17 @@ services:
       - ./postgres-data:/data/postgres
     ports:
       - "5432:5432"
+  app:
+    build: .
+    container_name: go_app
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=my_pass
+      - DB_NAME=postgres
+    depends_on:
+      - postgres
+    restart: unless-stopped
