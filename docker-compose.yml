@@ -21,11 +21,11 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=my_pass
-      - DB_NAME=postgres
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=postgres
+      - PGPASSWORD=my_pass
+      - PGNAME=postgres
     depends_on:
       postgres:
         condition: service_healthy
